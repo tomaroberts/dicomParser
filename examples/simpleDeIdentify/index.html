@@ -334,6 +334,26 @@
         reader.readAsArrayBuffer(file);
     }
 
+    // Array of DICOM attributes to De-Identify
+    const attributesToDeIdentify = [
+        "x00100010",
+        "x00100020",
+        "x00100030",
+        "x00081030",
+        "x00181030",
+        "x00080050",
+        "x00200010",
+        "x00080020",
+        "x00080030",
+        "x0008103e",
+        "x00080021",
+        "x00080031",
+        "x00080022",
+        "x00080032",
+        "x00080023",
+        "x00080033"
+    ];
+
 
     // this function gets called once the user drops the file onto the div
     function handleFileSelect(evt) {
