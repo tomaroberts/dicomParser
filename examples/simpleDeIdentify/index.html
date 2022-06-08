@@ -365,13 +365,19 @@
         // will require resizing the Uint8Array and updating the length of the element and I don't feel
         // like doing that right now :)
         $('input').each(function(index, input) {
-            var attr = $(input).attr('data-dicom');
-            var element = dataSet.elements[attr];
-            var newValue = $(input).val();
-            for(var i=0; i < element.length; i++) {
-                var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32;
-                console.log(char);
-                dataSet.byteArray[element.dataOffset + i] = char;
+            var attr = $(input).attr('data-dicom'); // attributes to de-identify
+            var element = dataSet.elements[attr];   // input DICOM
+
+            // Check if element exists in supplied DICOM
+            if (!element === undefined) {
+                var newValue = $(input).val();
+                for (var i = 0; i < element.length; i++) {
+                    var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32;
+                    console.log(char);
+                    dataSet.byteArray[element.dataOffset + i] = char;
+                }
+            } else {
+                console.log("Skipping element: " + element);
             }
         });
 
