@@ -389,7 +389,7 @@
             var element = dataSet.elements[attr];   // input DICOM
 
             // Check if element exists in supplied DICOM
-            if (!element === undefined) {
+            if (element !== undefined) {
                 var newValue = $(input).val();
                 for (var i = 0; i < element.length; i++) {
                     var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32;
