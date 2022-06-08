@@ -186,6 +186,13 @@
                             color = '#C8C8C8';
                         }
 
+                        // Alter colour of specific tags
+                        // Think I can use this to alter attributes in dataSet object in conjunction with some of the
+                        // functions within the DeIdentify example code
+                        if (element.tag === "x00080033") {
+                            color = '#FF0000';
+                        }
+
                     }
                     else {
                         color = '#C8C8C8';
