@@ -173,47 +173,12 @@
 
 <!-- jquery - included to make things easier to demo, not needed by dicomParser -->
 <script src="../jquery.min.js"></script>
+<script src="dumpDataSet.js"></script>
+<script src="dumpFile.js"></script>
+<script src="handles.js"></script>
 
 <script>
 
-    function dumpDataSet(dataSet)
-    {
-        $('span[data-dicom]').each(function(index, value)
-        {
-            var attr = $(value).attr('data-dicom');
-            var element = dataSet.elements[attr];
-            var text = "";
-            if(element !== undefined)
-            {
-                var str = dataSet.string(attr);
-                if(str !== undefined) {
-                    text = str;
-                }
-            }
-            $(value).text(text);
-        });
-
-        $('span[data-dicomUint]').each(function(index, value)
-        {
-            var attr = $(value).attr('data-dicomUint');
-            var element = dataSet.elements[attr];
-            var text = "";
-            if(element !== undefined)
-            {
-                if(element.length === 2)
-                {
-                    text += dataSet.uint16(attr);
-                }
-                else if(element.length === 4)
-                {
-                    text += dataSet.uint32(attr);
-                }
-            }
-
-            $(value).text(text);
-        });
-
-    }
     // from http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
     function makeRandomString(length)
     {
@@ -248,158 +213,29 @@
     }
 
 
-    var dataSet;
-
-    // This function will read the file into memory and then start dumping it
-    function dumpFile(file)
-    {
-        $('#status').removeClass('alert-warning alert-success alert-danger').addClass('alert-info');
-        $('#warnings').empty();
-        document.getElementById('statusText').innerHTML = 'Status: Loading file, please wait..';
-
-        var reader = new FileReader();
-        reader.onload = function(file) {
-            var arrayBuffer = reader.result;
-
-            // Here we have the file data as an ArrayBuffer.  dicomParser requires as input a
-            // Uint8Array so we create that here
-            var byteArray = new Uint8Array(arrayBuffer);
-
-            var kb = byteArray.length / 1024;
-            var mb = kb / 1024;
-            var byteStr = mb > 1 ? mb.toFixed(3) + " MB" : kb.toFixed(0) + " KB";
-            document.getElementById('statusText').innerHTML = '<span class="glyphicon glyphicon-cog"></span>Status: Parsing ' + byteStr + ' bytes, please wait..';
-
-            // set a short timeout to do the parse so the DOM has time to update itself with the above message
-            setTimeout(function() {
-
-                // Invoke the paresDicom function and get back a DataSet object with the contents
-                try {
-                    var start = new Date().getTime();
-
-                    dataSet = dicomParser.parseDicom(byteArray);
-                    // Here we call dumpDataSet to update the DOM with the contents of the dataSet
-                    dumpDataSet(dataSet);
-
-                    var end = new Date().getTime();
-                    var time = end - start;
-                    if(dataSet.warnings.length > 0)
-                    {
-                        $('#status').removeClass('alert-success alert-info alert-danger').addClass('alert-warning');
-                        $('#statusText').html('Status: Warnings encountered while parsing file (file of size '+ byteStr + ' parsed in ' + time + 'ms)');
-
-                        dataSet.warnings.forEach(function(warning) {
-                            $("#warnings").append('<li>' + warning +'</li>');
-                        });
-                    }
-                    else
-                    {
-                        var pixelData = dataSet.elements.x7fe00010;
-                        if(pixelData) {
-                            $('#status').removeClass('alert-warning alert-info alert-danger').addClass('alert-success');
-                            $('#statusText').html('Status: Ready (file of size '+ byteStr + ' parsed in ' + time + 'ms)');
-                        }
-                        else
-                        {
-                            $('#status').removeClass('alert-warning alert-info alert-danger').addClass('alert-success');
-                            $('#statusText').html('Status: Ready - no pixel data found (file of size ' + byteStr + ' parsed in ' + time + 'ms)');
-                        }
-                    }
-
-                    // Create de-identified values for each element
-                    $('input').each(function(index, input) {
-                        var attr = $(input).attr('data-dicom');
-                        var element = dataSet.elements[attr];
-                        var text = "";
-                        var vr = $(input).attr('data-vr');
-                        if(element !== undefined)
-                        {
-                            var str = dataSet.string(attr);
-                            if(str !== undefined) {
-                                text = str;
-                            }
-                        }
-                        var deIdentifiedValue = makeDeIdentifiedValue(text.length, vr);
-                        $(input).val(deIdentifiedValue);
-                        $(input).prop('readonly', true);
-
-                    });
-
-
-                }
-                catch(err)
-                {
-                    $('#status').removeClass('alert-success alert-info alert-warning').addClass('alert-danger');
-                    document.getElementById('statusText').innerHTML = 'Status: Error - ' + err + ' (file of size ' + byteStr + ' )';
-                }
-
-            }, 30);
-        };
-
-        reader.readAsArrayBuffer(file);
-    }
-
-    // Array of DICOM attributes to De-Identify
-    const attributesToDeIdentify = [
-        "x00100010",
-        "x00100020",
-        "x00100030",
-        "x00081030",
-        "x00181030",
-        "x00080050",
-        "x00200010",
-        "x00080020",
-        "x00080030",
-        "x0008103e",
-        "x00080021",
-        "x00080031",
-        "x00080022",
-        "x00080032",
-        "x00080023",
-        "x00080033"
-    ];
-
-
-    // this function gets called once the user drops the file onto the div
-    function handleFileSelect(evt) {
-        evt.stopPropagation();
-        evt.preventDefault();
-
-        // Get the FileList object that contains the list of files that were dropped
-        var files = evt.dataTransfer.files;
-
-        // this UI is only built for a single file so just dump the first one
-        dumpFile(files[0]);
-    }
-
-    function handleDragOver(evt) {
-        evt.stopPropagation();
-        evt.preventDefault();
-        evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-    }
-
-    // Setup the dnd listeners.
-    var dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('dragover', handleDragOver, false);
-    dropZone.addEventListener('drop', handleFileSelect, false);
-
     $('#download').click(function() {
         console.log(dataSet);
         // iterate through each input field and replace the original value with the de-identified value.
         // Note that the deidentified value must be <= length of the original value - longer values
         // will require resizing the Uint8Array and updating the length of the element and I don't feel
         // like doing that right now :)
+
+        // TAR - code below:
+        // index: <input> tags in HTML (i.e.: text boxes)
+        // input: current <input> tag
         $('input').each(function(index, input) {
-            var attr = $(input).attr('data-dicom'); // attributes to de-identify
-            var element = dataSet.elements[attr];   // input DICOM
+            var attr = $(input).attr('data-dicom'); // attribute to de-identify – gets data-dicom attribute from <input> tag
+            var element = dataSet.elements[attr];   // input DICOM – gets element corresponding to attr from dataSet object
 
             // Check if element exists in supplied DICOM
             if (element !== undefined) {
-                var newValue = $(input).val();
+                var newValue = $(input).val();  // If exists – newValue is value entered in <input> text box
+
+                // TAR - for loop rewrites the byteArray of that tag, think character-by-character
                 for (var i = 0; i < element.length; i++) {
-                    var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32;
+                    var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32; // Calculates ASCII char!!
                     console.log(char);
-                    dataSet.byteArray[element.dataOffset + i] = char;
+                    dataSet.byteArray[element.dataOffset + i] = char; // Replaces letter in byteArray with new char!!
                 }
             } else {
                 console.log("Skipping element: " + element);
