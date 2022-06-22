@@ -77,6 +77,25 @@ function rewriteDataSet(dataSet, output) {
             // EVERYTHING ELSE
             else {
 
+                // TAR: update dataSet
+                // TAR: alter colour of specific tags
+                // TODO: combine with DeIdentify scripts
+                attributesToDeIdentify.back
+                if ($.inArray(element.tag, attributesToDeIdentify) >= 0) {
+                    color = '#FF00FF';
+
+                    // create newValue
+                    var newValue = makeDeIdentifiedValue(element.length, element.vr);
+
+                    // overwrite byteArray corresponding to element in dataSet
+                    for (var i = 0; i < element.length; i++) {
+                        var char = (newValue.length > i) ? newValue.charCodeAt(i) : 32; // Calculates ASCII char!!
+                        console.log(char);
+                        dataSet.byteArray[element.dataOffset + i] = char; // Replaces letter in byteArray with new char!!
+                    }
+
+                }
+
                 // if the length of the element is less than 128 we try to show it.  We put this check in
                 // to avoid displaying large strings which makes it harder to use.
                 if (element.length < 128) {
