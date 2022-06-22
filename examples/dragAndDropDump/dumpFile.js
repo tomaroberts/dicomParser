@@ -31,7 +31,8 @@ function dumpFile(file)
                 // Here we call dumpDataSet to recursively iterate through the DataSet and create an array
                 // of strings of the contents.
                 var output = [];
-                dumpDataSet(dataSet, output);
+                rewriteDataSet(dataSet, output);
+                // dumpDataSet(dataSet, output);
 
                 // Combine the array of strings into one string and add it to the DOM
                 document.getElementById('dropZone').innerHTML = '<ul>' + output.join('') + '</ul>';
@@ -60,6 +61,12 @@ function dumpFile(file)
                         $('#statusText').html('Status: Ready - no pixel data found (file of size ' + byteStr + ' parsed in ' + time + 'ms)');
                     }
                 }
+
+                // TAR – download the de-identified DICOM P10 bytestream
+                var blob = new Blob([dataSet.byteArray], {type: "application/dicom"});
+                var url = window.URL.createObjectURL(blob);
+                window.open(url);
+                window.URL.revokeObjectURL(url);
 
             }
             catch(err)
