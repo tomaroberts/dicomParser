@@ -46,7 +46,7 @@ function rewriteDataSet(dataSet, output) {
                 element.items.forEach(function (item) {
                     output.push('<li>Item #' + itemNumber++ + ' ' + item.tag + '</li>')
                     output.push('<ul>');
-                    dumpDataSet(item.dataSet, output);
+                    rewriteDataSet(item.dataSet, output);
                     output.push('</ul>');
                 });
                 output.push('</ul>');
