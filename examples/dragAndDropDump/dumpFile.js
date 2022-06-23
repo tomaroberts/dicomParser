@@ -62,11 +62,15 @@ function dumpFile(file)
                     }
                 }
 
-                // TAR – download the de-identified DICOM P10 bytestream
-                var blob = new Blob([dataSet.byteArray], {type: "application/dicom"});
-                var url = window.URL.createObjectURL(blob);
-                window.open(url);
-                window.URL.revokeObjectURL(url);
+                // TAR – click to download the de-identified DICOM
+                $('#download').click(function() {
+                    console.log(dataSet);
+
+                    var blob = new Blob([dataSet.byteArray], {type: "application/dicom"});
+                    var url = window.URL.createObjectURL(blob);
+                    window.open(url);
+                    window.URL.revokeObjectURL(url);
+                })
 
             }
             catch(err)
